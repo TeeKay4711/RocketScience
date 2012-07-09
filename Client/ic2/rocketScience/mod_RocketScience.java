@@ -1,0 +1,568 @@
+package ic2.rocketScience;
+
+import ic2.api.Ic2Recipes;
+import ic2.common.*;
+import ic2.platform.Platform;
+import ic2.rocketScience.blocks.*;
+import ic2.rocketScience.entities.*;
+import ic2.rocketScience.gui.*;
+import ic2.rocketScience.items.*;
+import ic2.rocketScience.platform.RocketScience;
+import ic2.rocketScience.renderers.*;
+import ic2.rocketScience.tileEntities.*;
+
+import java.io.File;
+import java.util.Iterator;
+import java.util.List;
+
+import org.lwjgl.opengl.GL11;
+
+import net.minecraft.src.Block;
+import net.minecraft.src.EntityPlayer;
+import net.minecraft.src.EnumArmorMaterial;
+import net.minecraft.src.IBlockAccess;
+import net.minecraft.src.Item;
+import net.minecraft.src.ItemStack;
+import net.minecraft.src.ModLoader;
+import net.minecraft.src.RenderBlocks;
+import net.minecraft.src.Tessellator;
+import net.minecraft.src.TileEntity;
+import net.minecraft.src.World;
+import net.minecraft.src.forge.Configuration;
+import net.minecraft.src.forge.IGuiHandler;
+import net.minecraft.src.forge.MinecraftForge;
+import net.minecraft.src.forge.NetworkMod;
+
+public class mod_RocketScience extends RocketScience implements IGuiHandler
+{
+    public static Configuration config;
+    public static mod_RocketScience instance = null;
+
+    public static Block rsMachineBlock;
+    public static Block blockSuperconductor;
+    //public static Block blockBoosterModule;
+    public static Block blockBooster;
+    public static Block blockFusion;
+    public static Block blockWarhead;
+
+    public static int guiIdIsotope;
+    public static int guiIdFusion;
+    public static int guiIdAutoMiner;
+    public static int guiIdDefense;
+    public static int guiIdOffense;
+    public static int guiIdLaser;
+
+    public static ItemRocketScience itemParachute;
+    public static ItemRocketScience itemPassengerModule;
+    public static ItemRocketScience itemBoosterModule;
+    public static ItemRocketScience itemTntModule;
+    public static ItemRocketScience itemIncendiaryModule;
+    public static ItemRocketScience itemNuclearModule;
+    public static ItemRocketScience itemRangeFinder;
+    public static ItemRocketScience itemSuperconductorUncompressed;
+    public static ItemRocketScience itemDeuteriumCell;
+    public static ItemRocketScience itemCopperCoil;
+    public static ItemRocketScience itemCopperCoils;
+    public static ItemRocketScience itemSuperCoil;
+    public static ItemRocketScience itemSuperCoils;
+    public static ItemRocketScience itemOhmicHeater;
+    public static ItemRocketScience itemNeutralHeater;
+    public static ItemRocketScience itemRfHeater;
+    public static ItemRocketScience itemIonDrive;
+    public static ItemRocketScience itemPassengerDepleted;
+    public static ItemRocketScience itemLithium;
+    public static ItemRocketScience itemLithiumCell;
+    public static ItemRocketScience itemLithium6Cell;
+    public static ItemRocketScience itemTritiumCell;
+    public static ItemRocketScience itemThermoModule;
+
+    public static ItemVacuum itemVacuum;
+    public static ItemRocketScienceArmor itemParachuteArmor;
+    public static ItemHandPump itemHandPump;
+    public static ItemAutominerFinder itemFinder;
+
+    public static int blockBoosterId;
+    public static int blockWarheadId;
+    public static int blockSuperconductorId;
+    public static int blockMachineId;
+    public static int blockFusionId;
+
+    public static int itemParachuteId;
+    public static int itemPassengerModuleId;
+    public static int itemBoosterModuleId;
+    public static int itemTntModuleId;
+    public static int itemIncendiaryModuleId;
+    public static int itemNuclearModuleId;
+    public static int itemRangeFinderId;
+    public static int itemParachuteArmorId;
+    public static int itemSuperconductorUncompressedId;
+    public static int itemDeuteriumCellId;
+    public static int itemCopperCoilId;
+    public static int itemCopperCoilsId;
+    public static int itemSuperCoilId;
+    public static int itemSuperCoilsId;
+    public static int itemOhmicHeaterId;
+    public static int itemNeutralHeaterId;
+    public static int itemRfHeaterId;
+    public static int itemVacuumId;
+    public static int itemHandPumpId;
+    public static int itemIonDriveId;
+    public static int itemPassengerDepletedId;
+    public static int itemFinderId;
+    public static int itemLithiumId;
+    public static int itemLithiumCellId;
+    public static int itemLithium6CellId;
+    public static int itemTritiumCellId;
+    public static int itemThermoModuleId;
+
+    public static int missileModelID;
+    public static int warheadModelID;
+    public static int machineModelID;
+    
+    public static boolean initialized;
+    public static boolean parachuteDeployed = false;
+    public static boolean parachuteEquipped = false;
+
+    public mod_RocketScience()
+    {
+        if (instance == null)
+        {
+            instance = this;
+        }
+        else
+        {
+            System.out.println("Should never happen!");
+        }
+    }
+
+    @Override
+    public void load()
+    {
+        MinecraftForge.versionDetect("RocketScience", 3, 1, 2);
+        Configuration config;
+
+        try
+        {
+            File var2 = new File(new File(Platform.getMinecraftDir(), "config"), "RocketScienceClient1.cfg");
+            config = new Configuration(var2);
+            config.load();
+            System.out.println("[RocketScience] Config loaded from " + var2.getAbsolutePath());
+        }
+        catch (Exception var5)
+        {
+            System.out.println("[RocketScience] Error while trying to access configuration! " + var5);
+            config = null;
+        }
+        
+        // Blocks
+        blockBoosterId = config.getOrCreateBlockIdProperty("blockBooster", 201).getInt(201);
+        blockWarheadId = config.getOrCreateBlockIdProperty("blockWarhead", 202).getInt(202);
+        blockSuperconductorId = config.getOrCreateBlockIdProperty("blockSupercondutor", 203).getInt(203);
+        blockMachineId = config.getOrCreateBlockIdProperty("blockMachine", 204).getInt(204);
+        blockFusionId = config.getOrCreateBlockIdProperty("blockFusion", 205).getInt(205);
+        blockBooster = new BlockMissileBooster(blockBoosterId, 0).setBlockName("blockBooster");
+        blockWarhead = new BlockMissileWarhead(blockWarheadId).setBlockName("blockWarhead");
+        blockSuperconductor = new BlockSuperconductor(blockSuperconductorId).setBlockName("blockSuperconductor");
+        rsMachineBlock = new BlockRocketScienceMachine(blockMachineId).setBlockName("rsMachineBlock");
+        blockFusion = new BlockRocketScienceFusion(blockFusionId).setBlockName("blockFusion");
+        // Gui Id's
+        guiIdIsotope = (new Integer(config.getOrCreateIntProperty("guiIdIsotpe", "general", 40).value)).intValue();
+        guiIdFusion = (new Integer(config.getOrCreateIntProperty("guiIdFusion", "general", 41).value)).intValue();
+        guiIdAutoMiner = (new Integer(config.getOrCreateIntProperty("guiIdAutoMiner", "general", 42).value)).intValue();
+        guiIdDefense = (new Integer(config.getOrCreateIntProperty("guiIdDefense", "general", 43).value)).intValue();
+        guiIdOffense = (new Integer(config.getOrCreateIntProperty("guiIdOffense", "general", 44).value)).intValue();
+        guiIdLaser = (new Integer(config.getOrCreateIntProperty("guiIdLaser", "general", 45).value)).intValue();
+        //itemDeuteriumCellId = (new Integer(config.getOrCreateIntProperty("itemDeuteriumCellId", "item", 20009).value)).intValue();
+        //itemLithiumCellId = (new Integer(config.getOrCreateIntProperty("itemLithiumCellId", "item", 20024).value)).intValue();
+        //itemLithium6CellId = (new Integer(config.getOrCreateIntProperty("itemLithium6CellId", "item", 20026).value)).intValue();
+        itemParachuteId = config.getOrCreateIntProperty("itemParachuteId", "item", 20000).getInt(20000);
+        itemPassengerModuleId = config.getOrCreateIntProperty("itemPassengerModuleId", "item", 20001).getInt(20001);
+        itemBoosterModuleId = config.getOrCreateIntProperty("itemBoosterModuleId", "item", 20002).getInt(20002);
+        itemTntModuleId = config.getOrCreateIntProperty("itemTntModuleId", "item", 20003).getInt(20003);
+        itemIncendiaryModuleId = config.getOrCreateIntProperty("itemIncendiaryModuleId", "item", 20004).getInt(20004);
+        itemNuclearModuleId = config.getOrCreateIntProperty("itemNuclearModuleId", "item", 20005).getInt(20005);
+        itemRangeFinderId = config.getOrCreateIntProperty("itemRangeFinderId", "item", 20006).getInt(20006);
+        itemParachuteArmorId = config.getOrCreateIntProperty("itemParachuteArmorId", "item", 20007).getInt(20007);
+        itemSuperconductorUncompressedId = config.getOrCreateIntProperty("itemSuperconductorUncompressedId", "item", 20008).getInt(20008);
+        itemDeuteriumCellId = config.getOrCreateIntProperty("itemDeuteriumCellId", "item", 20009).getInt(20009);
+        itemCopperCoilId = config.getOrCreateIntProperty("itemCopperCoilId", "item", 20010).getInt(20010);
+        itemCopperCoilsId = config.getOrCreateIntProperty("itemCopperCoilsId", "item", 20011).getInt(20011);
+        itemSuperCoilId = config.getOrCreateIntProperty("itemSuperCoilId", "item", 20012).getInt(20012);
+        itemSuperCoilsId = config.getOrCreateIntProperty("itemSuperCoilsId", "item", 20013).getInt(20013);
+        itemOhmicHeaterId = config.getOrCreateIntProperty("itemOhmicHeaterId", "item", 20014).getInt(20014);
+        itemNeutralHeaterId = config.getOrCreateIntProperty("itemNeutralHeaterId", "item", 20015).getInt(20015);
+        itemRfHeaterId = config.getOrCreateIntProperty("itemRfHeaterId", "item", 20016).getInt(20016);
+        itemVacuumId = config.getOrCreateIntProperty("itemVacuumId", "item", 20017).getInt(20017);
+        itemHandPumpId = config.getOrCreateIntProperty("itemHandPumpId", "item", 20020).getInt(20020);
+        itemIonDriveId = config.getOrCreateIntProperty("itemIonDriveId", "item", 20021).getInt(20021);
+        itemPassengerDepletedId = config.getOrCreateIntProperty("itemPassengerDepletedId", "item", 20022).getInt(20022);
+        itemFinderId = config.getOrCreateIntProperty("itemFinderId", "item", 20023).getInt(20023);
+        itemLithiumId = config.getOrCreateIntProperty("itemLithiumId", "item", 20024).getInt(20024);
+        itemLithiumCellId = config.getOrCreateIntProperty("itemLithiumCellId", "item", 20025).getInt(20025);
+        itemLithium6CellId = config.getOrCreateIntProperty("itemLithium6CellId", "item", 20026).getInt(20026);
+        itemTritiumCellId = config.getOrCreateIntProperty("itemTritiumCellId", "item", 20027).getInt(20027);
+        itemThermoModuleId = config.getOrCreateIntProperty("itemThermoModuleId", "item", 20028).getInt(20028);
+        //itemDeuteriumCellId = config.getOrCreateIntProperty("itemDeuteriumCell", "item", 20009).getInt(20009);
+        //blockBooster = new BlockMissileBooster(blockBoosterId, 0).setBlockName("Missile");
+        //blockWarhead = new BlockMissileWarhead(blockWarheadId).setBlockName("If you have this block, it's a glitch.");
+        //rsMachineBlock = new BlockRocketScienceMachine(blockMachineId).setBlockName("RS Machine");
+        //blockFusion = new BlockRocketScienceFusion(blockFusionId).setBlockName("RS Generator");
+        //blockSuperconductor = new BlockSuperconductor(blockSuperconductorId).setBlockName("Superconductor");
+        itemParachute = (ItemRocketScience)new ItemRocketScience(itemParachuteId, 0).setItemName("Parachute");
+        itemPassengerModule = (ItemRocketScience)new ItemRocketScience(itemPassengerModuleId, 1).setItemName("Passenger Module");
+        itemBoosterModule = (ItemRocketScience)new ItemRocketScience(itemBoosterModuleId, 2).setItemName("Booster Module");
+        itemTntModule = (ItemRocketScience)new ItemRocketScience(itemTntModuleId, 3).setItemName("TNT Warhead");
+        itemIncendiaryModule = (ItemRocketScience)new ItemRocketScience(itemIncendiaryModuleId, 4).setItemName("Incendiary Warhead");
+        itemNuclearModule = (ItemRocketScience)new ItemRocketScience(itemNuclearModuleId, 5).setItemName("Nuclear Warhead");
+        itemRangeFinder = (ItemRocketScience)new ItemRangefinder(itemRangeFinderId, 6).setItemName("Laser Rangefinder");
+        itemParachuteArmor = (ItemRocketScienceArmor)new ItemRocketScienceArmor(itemParachuteArmorId, 7, EnumArmorMaterial.CLOTH, ModLoader.addArmor("parachute"), 1, 1000).setItemName("Parachute Pack");
+        itemSuperconductorUncompressed = (ItemRocketScience)new ItemRocketScience(itemSuperconductorUncompressedId, 8).setItemName("SuperUncompressed");
+        itemDeuteriumCell = (ItemRocketScience)(new ItemRocketScience(itemDeuteriumCellId, 9)).setItemName("itemCellDeuterium");
+        itemCopperCoil = (ItemRocketScience)new ItemRocketScience(itemCopperCoilId, 10).setItemName("CopperCoil");
+        itemCopperCoils = (ItemRocketScience)new ItemRocketScience(itemCopperCoilsId, 11).setItemName("CopperCoils");
+        itemSuperCoil = (ItemRocketScience)new ItemRocketScience(itemSuperCoilId, 12).setItemName("SuperCoil");
+        itemSuperCoils = (ItemRocketScience)new ItemRocketScience(itemSuperCoilsId, 13).setItemName("SuperCoils");
+        itemOhmicHeater = (ItemRocketScience)new ItemRocketScience(itemOhmicHeaterId, 14).setItemName("OhmicHeater");
+        itemNeutralHeater = (ItemRocketScience)new ItemRocketScience(itemNeutralHeaterId, 15).setItemName("NeutralHeater");
+        itemRfHeater = (ItemRocketScience)new ItemRocketScience(itemRfHeaterId, 16).setItemName("RFHeater");
+        itemVacuum = (ItemVacuum)new ItemVacuum(itemVacuumId, 17).setItemName("Vacuum");
+        itemHandPump = (ItemHandPump)new ItemHandPump(itemHandPumpId, 20).setItemName("HandPump");
+        itemIonDrive = (ItemRocketScience)new ItemRocketScience(itemIonDriveId, 21).setItemName("IonDrive");
+        itemPassengerDepleted = (ItemPassengerDepleted)new ItemPassengerDepleted(itemPassengerDepletedId, 22).setItemName("PassengerDepleted");
+        itemFinder = (ItemAutominerFinder)new ItemAutominerFinder(itemFinderId, 23).setItemName("Finder");
+        itemLithium = (ItemRocketScience)new ItemRocketScience(itemLithiumId, 24).setItemName("Lithium");
+        itemLithiumCell = (ItemRocketScience)new ItemRocketScience(itemLithiumCellId, 25).setItemName("LithiumCell");
+        itemLithium6Cell = (ItemRocketScience)new ItemRocketScience(itemLithium6CellId, 26).setItemName("Lithium6Cell");
+        itemTritiumCell = (ItemRocketScience)new ItemRocketScience(itemTritiumCellId, 27).setItemName("TritiumCell");
+        itemThermoModule = (ItemRocketScience)new ItemRocketScience(itemThermoModuleId, 5).setItemName("Thermonuclear Warhead");
+        ModLoader.registerBlock(blockBooster, ItemMissile.class);
+        ModLoader.registerBlock(blockWarhead, null);
+        ModLoader.registerBlock(blockSuperconductor);
+        ModLoader.registerBlock(rsMachineBlock, ItemRocketScienceMachine.class);
+        ModLoader.registerBlock(blockFusion);
+        //ModLoader.addName(new ItemStack(rsMachineBlock, 1 , 0), "Isotope Separator");
+        ModLoader.addName(itemLithiumCell, "Lithium Cell");
+        ModLoader.addName(itemDeuteriumCell, "Deuterium Cell");
+        ModLoader.addName(itemLithium6Cell, "Lithium 6 Cell");
+        config.save();
+        ModLoader.addName(itemBoosterModule, "Booster Module");
+        ModLoader.addName(itemPassengerModule, "Passenger Module");
+        ModLoader.addName(itemParachute, "Parachute");
+        ModLoader.addName(blockBooster, "Missile");
+        ModLoader.addName(blockWarhead, "If you have this block, it's a glitch.");
+        ModLoader.addName(itemTntModule, "TNT Warhead");
+        ModLoader.addName(itemIncendiaryModule, "Incendiary Warhead");
+        ModLoader.addName(itemNuclearModule, "Nuclear Warhead");
+        ModLoader.addName(itemRangeFinder, "Laser Rangefinder");
+        ModLoader.addName(itemParachuteArmor, "Parachute Pack");
+        ModLoader.addName(blockSuperconductor, "Superconductor");
+        ModLoader.addName(itemSuperconductorUncompressed, "Graphene-Gold Lattice");
+        ModLoader.addName(itemDeuteriumCell, "Deuterium Cell");
+        ModLoader.addName(itemCopperCoil, "Copper Loop");
+        ModLoader.addName(itemCopperCoils, "Copper Coils");
+        ModLoader.addName(itemSuperCoil, "Superconductor Loop");
+        ModLoader.addName(itemSuperCoils, "Superconducting Coils");
+        ModLoader.addName(itemOhmicHeater, "Ohmic Heating System");
+        ModLoader.addName(itemNeutralHeater, "Neutral-Beam Heating System");
+        ModLoader.addName(itemRfHeater, "RF Cyclotron Heating System");
+        ModLoader.addName(new ItemStack(blockBooster, 1, 14), "Missile");
+        ModLoader.addName(new ItemStack(blockBooster, 1, 15), "Reusable Passenger Rocket (half charge)");
+        ModLoader.addName(new ItemStack(blockBooster, 1, 0), "Reusable Passenger Rocket");
+        ModLoader.addName(new ItemStack(blockBooster, 1, 4), "Incendiary Missile");
+        ModLoader.addName(new ItemStack(blockBooster, 1, 8), "Nuclear Missile");
+        ModLoader.addName(new ItemStack(blockBooster, 1, 12), "Passenger Rocket");
+        ModLoader.addName(new ItemStack(blockBooster, 1, 13), "Thermonuclear Missile");
+        ModLoader.addName(new ItemStack(rsMachineBlock, 1, 0), "Isotopic Separator");
+        ModLoader.addName(new ItemStack(rsMachineBlock, 1, 1), "Mobile Auto-Miner");
+        ModLoader.addName(new ItemStack(rsMachineBlock, 1, 2), "Missile Defense System");
+        ModLoader.addName(new ItemStack(rsMachineBlock, 1, 3), "Missile Targeting System");
+        ModLoader.addName(new ItemStack(rsMachineBlock, 1, 4), "Missile Defense Laser");
+        ModLoader.addName(new ItemStack(rsMachineBlock, 1, 5), "Radar");
+        ModLoader.addName(new ItemStack(blockFusion, 1, 0), "Fusion Reactor");
+        ModLoader.addName(itemVacuum, "Wet/Dry Vac");
+        ModLoader.addName(itemHandPump, "Hand Pump");
+        ModLoader.addName(itemIonDrive, "Ion Drive");
+        ModLoader.addName(itemPassengerDepleted, "Discharged Passenger Rocket");
+        ModLoader.addName(itemFinder, "Autominer Location Device");
+        ModLoader.addName(itemLithium, "Lithium");
+        ModLoader.addName(itemLithiumCell, "Lithium Cell");
+        ModLoader.addName(itemLithium6Cell, "Lithium-6 Cell");
+        ModLoader.addName(itemTritiumCell, "Tritium Cell");
+        ModLoader.addName(itemThermoModule, "Thermonuclear Warhead");
+        ModLoader.addRecipe(new ItemStack(itemBoosterModule, 2), new Object[] { "#X#", "#X#", "#X#", Character.valueOf('#'), Ic2Items.refinedIronIngot, Character.valueOf('X'), Ic2Items.coalfuelCell});
+        ModLoader.addRecipe(new ItemStack(itemBoosterModule, 2), new Object[] { "#X#", "#X#", "#X#", Character.valueOf('#'), Ic2Items.refinedIronIngot, Character.valueOf('X'), Ic2Items.biofuelCell});
+        ModLoader.addRecipe(new ItemStack(itemParachute, 1), new Object[] {"XXX", "O O", " O ", Character.valueOf('X'), Item.leather, Character.valueOf('O'), Item.silk});
+        ModLoader.addRecipe(new ItemStack(itemParachuteArmor, 1), new Object[] {"L L", "LPL", "LLL", Character.valueOf('L'), Item.leather, Character.valueOf('P'), itemParachute});
+        ModLoader.addRecipe(new ItemStack(itemPassengerModule, 1), new Object[] {"P", "M", Character.valueOf('P'), itemParachute, Character.valueOf('M'), Item.minecartEmpty});
+        ModLoader.addRecipe(new ItemStack(itemTntModule, 1), new Object[] {" I ", "ITI", Character.valueOf('I'), Ic2Items.refinedIronIngot, Character.valueOf('T'), Block.tnt});
+        ModLoader.addRecipe(new ItemStack(itemIncendiaryModule, 1), new Object[] {" I ", "ITI", Character.valueOf('I'), Ic2Items.refinedIronIngot, Character.valueOf('T'), Ic2Items.lavaCell});
+        ModLoader.addRecipe(new ItemStack(itemNuclearModule, 1), new Object[] {" I ", "ITI", Character.valueOf('I'), Ic2Items.refinedIronIngot, Character.valueOf('T'), Ic2Items.nuke});
+        ModLoader.addRecipe(new ItemStack(blockBooster, 1, 12), new Object[] {"P", "M", Character.valueOf('P'), itemPassengerModule, Character.valueOf('M'), itemBoosterModule});
+        ModLoader.addRecipe(new ItemStack(blockBooster, 1, 8), new Object[] {"P", "M", Character.valueOf('P'), itemNuclearModule, Character.valueOf('M'), itemBoosterModule});
+        ModLoader.addRecipe(new ItemStack(blockBooster, 1, 4), new Object[] {"P", "M", Character.valueOf('P'), itemIncendiaryModule, Character.valueOf('M'), itemBoosterModule});
+        ModLoader.addRecipe(new ItemStack(blockBooster, 1, 14), new Object[] {"P", "M", Character.valueOf('P'), itemTntModule, Character.valueOf('M'), itemBoosterModule});
+        ModLoader.addRecipe(new ItemStack(itemSuperconductorUncompressed), new Object[] {" C ", " D ", " G ", Character.valueOf('C'), Ic2Items.carbonPlate, Character.valueOf('D'), Item.redstone, Character.valueOf('G'), Item.ingotGold});
+        ModLoader.addRecipe(new ItemStack(rsMachineBlock, 1, 0), new Object[] {"ICI", "RER", "IAI", Character.valueOf('E'), Ic2Items.extractor, Character.valueOf('I'), Ic2Items.refinedIronIngot, Character.valueOf('R'), Item.redstone, Character.valueOf('A'), Ic2Items.advancedMachine, Character.valueOf('C'), Ic2Items.advancedCircuit});
+        ModLoader.addRecipe(new ItemStack(blockFusion, 1, 0), new Object[] {"CCC", "CAC", "CCC", Character.valueOf('C'), Ic2Items.reactorChamber, Character.valueOf('A'), Ic2Items.advancedMachine});
+        ModLoader.addRecipe(new ItemStack(itemCopperCoil, 1), new Object[] {"CCC", "C C", "CCC", Character.valueOf('C'), Ic2Items.copperIngot});
+        ModLoader.addRecipe(new ItemStack(itemCopperCoils, 1), new Object[] {"CCC", "C C", "CCC", Character.valueOf('C'), itemCopperCoil});
+        ModLoader.addRecipe(new ItemStack(itemSuperCoil, 1), new Object[] {"CCC", "C C", "CCC", Character.valueOf('C'), blockSuperconductor});
+        ModLoader.addRecipe(new ItemStack(itemSuperCoils, 1), new Object[] {"CCC", "C C", "CCC", Character.valueOf('C'), itemSuperCoil});
+        ModLoader.addRecipe(new ItemStack(itemOhmicHeater, 1), new Object[] {"WWW", "C W", "WWW", Character.valueOf('W'), Ic2Items.insulatedCopperCableItem, Character.valueOf('C'), Ic2Items.electronicCircuit});
+        ModLoader.addRecipe(new ItemStack(itemRfHeater, 1), new Object[] {"F", "A", "M", Character.valueOf('M'), Ic2Items.machine, Character.valueOf('A'), Ic2Items.advancedCircuit, Character.valueOf('F'), Ic2Items.frequencyTransmitter});
+        ModLoader.addRecipe(new ItemStack(itemNeutralHeater, 1), new Object[] {"AMW", " I ", Character.valueOf('I'), Ic2Items.refinedIronIngot, Character.valueOf('M'), Ic2Items.machine, Character.valueOf('A'), Ic2Items.advancedCircuit, Character.valueOf('W'), Ic2Items.insulatedCopperCableItem});
+        ModLoader.addRecipe(new ItemStack(itemRangeFinder, 1), new Object[] {"III", "ICD", "III", Character.valueOf('I'), Ic2Items.refinedIronIngot, Character.valueOf('C'), Ic2Items.electronicCircuit, Character.valueOf('D'), Item.diamond});
+        ModLoader.addRecipe(new ItemStack(itemVacuum), new Object[] {"R", "P", "B", Character.valueOf('R'), Ic2Items.rubber, Character.valueOf('B'), Ic2Items.reBattery, Character.valueOf('P'), Ic2Items.pump});
+        ModLoader.addRecipe(new ItemStack(itemHandPump), new Object[] {"RB", " C", Character.valueOf('C'), Ic2Items.cell, Character.valueOf('B'), Ic2Items.bronzeIngot, Character.valueOf('R'), Ic2Items.rubber});
+        ModLoader.addRecipe(new ItemStack(itemIonDrive), new Object[] {"ACA", "ARA", "AGA", Character.valueOf('A'), Ic2Items.advancedAlloy, Character.valueOf('C'), new ItemStack(Ic2Items.energyCrystal.getItem(), 1, 26), Character.valueOf('R'), Ic2Items.advancedCircuit, Character.valueOf('G'), Block.glowStone});
+        ModLoader.addRecipe(new ItemStack(itemIonDrive), new Object[] {"ACA", "ARA", "AGA", Character.valueOf('A'), Ic2Items.advancedAlloy, Character.valueOf('C'), new ItemStack(Ic2Items.energyCrystal.getItem(), 1, 27), Character.valueOf('R'), Ic2Items.advancedCircuit, Character.valueOf('G'), Block.glowStone});
+        ModLoader.addRecipe(new ItemStack(itemPassengerDepleted, 1, 10001), new Object[] {"P", "I", Character.valueOf('P'), itemPassengerModule, Character.valueOf('I'), itemIonDrive});
+        ModLoader.addRecipe(new ItemStack(rsMachineBlock, 1, 1), new Object[] {"CTC", "AMA", "I I", Character.valueOf('C'), Ic2Items.advancedCircuit, Character.valueOf('T'), Block.chest, Character.valueOf('A'), Ic2Items.advancedMachine, Character.valueOf('M'), Ic2Items.miner, Character.valueOf('I'), itemIonDrive});
+        ModLoader.addRecipe(new ItemStack(itemThermoModule), new Object[] {" T ", "DND", " T ", Character.valueOf('T'), itemTritiumCell, Character.valueOf('D'), itemDeuteriumCell, Character.valueOf('N'), itemNuclearModule});
+        ModLoader.addRecipe(new ItemStack(itemThermoModule), new Object[] {" D ", "TNT", " D ", Character.valueOf('T'), itemTritiumCell, Character.valueOf('D'), itemDeuteriumCell, Character.valueOf('N'), itemNuclearModule});
+        ModLoader.addRecipe(new ItemStack(blockBooster, 1, 13), new Object[] {"P", "M", Character.valueOf('P'), itemThermoModule, Character.valueOf('M'), itemBoosterModule});
+        ModLoader.addRecipe(new ItemStack(rsMachineBlock, 1, 2), new Object[] {"GAG", "RMR", "GCG", Character.valueOf('G'), Block.thinGlass, Character.valueOf('A'), Ic2Items.advancedCircuit, Character.valueOf('R'), Item.redstone, Character.valueOf('M'), Ic2Items.machine, Character.valueOf('C'), Ic2Items.electronicCircuit});
+        ModLoader.addRecipe(new ItemStack(rsMachineBlock, 1, 3), new Object[] {"GCG", "RMR", "GAG", Character.valueOf('G'), Block.thinGlass, Character.valueOf('A'), Ic2Items.advancedCircuit, Character.valueOf('R'), Item.redstone, Character.valueOf('M'), Ic2Items.machine, Character.valueOf('C'), Ic2Items.electronicCircuit});
+        ModLoader.addRecipe(new ItemStack(rsMachineBlock, 1, 4), new Object[] {" E ", "GCG", "AMA", Character.valueOf('E'), new ItemStack(Ic2Items.energyCrystal.getItem(), 1, 26), Character.valueOf('G'), Item.lightStoneDust, Character.valueOf('C'), Ic2Items.advancedCircuit, Character.valueOf('A'), Ic2Items.advancedAlloy, Character.valueOf('M'), Ic2Items.advancedMachine});
+        ModLoader.addRecipe(new ItemStack(rsMachineBlock, 1, 5), new Object[] {"IFI", " I ", " M ", Character.valueOf('I'), Ic2Items.refinedIronIngot, Character.valueOf('F'), Ic2Items.frequencyTransmitter, Character.valueOf('M'), Ic2Items.machine});
+        ModLoader.addShapelessRecipe(StackUtil.copyWithSize(Ic2Items.copperIngot, 64), new Object[] {itemCopperCoils});
+        ModLoader.addShapelessRecipe(StackUtil.copyWithSize(Ic2Items.copperIngot, 8), new Object[] {itemCopperCoil});
+        ModLoader.addShapelessRecipe(new ItemStack(blockSuperconductor, 64), new Object[] {itemSuperCoils});
+        ModLoader.addShapelessRecipe(new ItemStack(blockSuperconductor, 8), new Object[] {itemSuperCoil});
+        ModLoader.addShapelessRecipe(new ItemStack(itemFinder, 1), new Object[] {Ic2Items.frequencyTransmitter, new ItemStack(Item.dyePowder, 1, 1)});
+        ModLoader.addShapelessRecipe(new ItemStack(itemLithiumCell, 1), new Object[] {Ic2Items.cell, itemLithium});
+        /*ModLoader.registerEntityID(EntityMissileBooster.class, "Missile", ModLoader.getUniqueEntityId());
+        ModLoader.registerEntityID(EntityMissileWarhead.class, "Warhead", ModLoader.getUniqueEntityId());
+        ModLoader.registerEntityID(EntityMissilePassengerBooster.class, "Passenger Missile", ModLoader.getUniqueEntityId());
+        ModLoader.registerEntityID(EntityMissilePassengerWarhead.class, "Passenger Warhead", ModLoader.getUniqueEntityId());
+        ModLoader.registerEntityID(EntityRangefinder.class, "Rangefinder", ModLoader.getUniqueEntityId());
+        ModLoader.registerEntityID(EntityMissileMinerBooster.class, "Miner", ModLoader.getUniqueEntityId());
+        ModLoader.registerEntityID(EntityDefenseLaser.class, "Defense Laser", ModLoader.getUniqueEntityId());*/
+        Ic2Recipes.addCompressorRecipe(new ItemStack(itemSuperconductorUncompressed), new ItemStack(blockSuperconductor));
+        Ic2Recipes.addExtractorRecipe(new ItemStack(Item.clay), new ItemStack(itemLithium));
+
+        ModLoader.setInGameHook(this, true, true);
+        //MinecraftForge.registerConnectionHandler(this);
+        MinecraftForge.registerEntity(EntityMissileBooster.class         , this, 5, 160, 5, true);
+        MinecraftForge.registerEntity(EntityMissileWarhead.class         , this, 6, 160, 5, true);
+        MinecraftForge.registerEntity(EntityMissilePassengerBooster.class, this, 7, 160, 5, true);
+        MinecraftForge.registerEntity(EntityMissilePassengerWarhead.class, this, 8, 160, 5, true);
+        MinecraftForge.registerEntity(EntityRangefinder.class            , this, 9, 160, 5, true);
+        MinecraftForge.registerEntity(EntityMissileMinerBooster.class    , this, 10, 160, 5, true);
+        MinecraftForge.registerEntity(EntityDefenseLaser.class           , this, 11, 160, 5, true);
+        MinecraftForge.registerEntity(EntityParachute.class              , this, 12, 160, 5, true);
+
+        ModLoader.setInGameHook(instance, true, false);
+        MinecraftForge.setGuiHandler(this, this);
+        super.load();
+        initialized = true;
+
+    }
+
+    @Override
+    public void modsLoaded()
+    {
+        if (!initialized)
+        {
+            throw new RuntimeException("IC2 has failed to initialize properly");
+        }
+        else
+        {
+            super.modsLoaded();
+            ModLoader.registerTileEntity(TileEntityMissile.class, "Missile");
+            ModLoader.registerTileEntity(TileEntitySuperconductor.class, "Superconductor");
+            ModLoader.registerTileEntity(TileEntitySeparator.class, "Isotopic Separator");
+            ModLoader.registerTileEntity(TileEntityFusion.class, "Fusion Reactor");
+            ModLoader.registerTileEntity(TileEntityAutoMiner.class, "Autominer");
+            ModLoader.registerTileEntity(TileEntityDefense.class, "Missile Defense");
+            ModLoader.registerTileEntity(TileEntityOffense.class, "Missile Targeting");
+            ModLoader.registerTileEntity(TileEntityLaser.class, "Defense Laser");
+            ModLoader.registerTileEntity(TileEntityRadar.class, "Radar");
+            TileEntitySeparator.initRecipes();
+
+        }
+    }
+
+    @Override
+    public String getPriorities()
+    {
+        return "after:mod_IC2";
+    }
+
+    public static void displayGuiScreen(EntityPlayer player, int Id, TileEntity tileentity)
+    {
+        player.openGui(instance, Id, tileentity.worldObj, tileentity.xCoord, tileentity.yCoord, tileentity.zCoord);
+    }
+
+    @Override
+    public boolean clientSideRequired()
+    {
+        return true;
+    }
+
+    @Override
+    public boolean serverSideRequired()
+    {
+        return false;
+    }
+
+    @Override
+    public Object getGuiElement(int id, EntityPlayer player, World world,
+            int x, int y, int z)
+    {
+        TileEntity tileentity = world.getBlockTileEntity(x, y, z);
+        System.out.println("GuiId: " + id);
+
+        if (id == guiIdIsotope)
+        {
+            return new GuiSeparator(player.inventory, (TileEntitySeparator)tileentity);
+        }
+
+        if (id == guiIdFusion)
+        {
+            return new GuiFusion(player.inventory, (TileEntityFusion)tileentity);
+        }
+
+        if (id == guiIdAutoMiner)
+        {
+            return new GuiAutoMiner(player.inventory, (TileEntityAutoMiner)tileentity);
+        }
+
+        if (id == guiIdDefense)
+        {
+            return new GuiDefense(player.inventory, (TileEntityDefense)tileentity);
+        }
+
+        if (id == guiIdOffense)
+        {
+            return new GuiOffense(player.inventory, (TileEntityOffense)tileentity);
+        }
+
+        if (id == guiIdLaser);
+
+        //return new GuiLaser(player.inventory, tileentity);
+        return null;
+    }
+/*
+    public boolean onTickInGame(float tick, Minecraft game)
+    {
+        ItemStack chute = game.thePlayer.inventory.armorItemInSlot(2);
+
+        if (chute == null)
+        {
+            return true;
+        }
+
+        boolean parachuteEquipped = (chute.itemID - 256) == itemParachuteArmorId;
+        //boolean parachuteDeployed;
+
+        if (game.thePlayer.fallDistance > 3 && parachuteEquipped)
+        {
+            game.thePlayer.fallDistance = 1;
+            game.thePlayer.motionY = -0.3f;
+
+            if (!parachuteDeployed)
+            {
+                parachuteDeployed = true;
+                EntityParachute theChute = new EntityParachute(game.theWorld, (int)game.thePlayer.posX, (int)game.thePlayer.posY, (int)game.thePlayer.posZ, game.thePlayer);
+                game.theWorld.spawnEntityInWorld(theChute);
+            }
+        }
+        else if (parachuteDeployed && game.thePlayer.fallDistance == 0)
+        {
+            parachuteDeployed = false;
+        }
+        else if (parachuteDeployed)
+        {
+            game.thePlayer.fallDistance = 0.1f;
+            game.thePlayer.motionY = -0.4f;
+        }
+
+        return true;
+    }
+*/
+    
+    public static boolean OnTickInGame(List list, World world)
+    {
+        Iterator iterator = list.iterator();
+
+        while (iterator.hasNext())
+        {
+            EntityPlayer player = (EntityPlayer)iterator.next();
+            
+            if (player != null)
+            {
+                //ItemStack chute = player.inventory.armorInventory[2];
+                //System.out.println("posX: "+player.posX+"posY: "+player.posY+"posZ: "+player.posZ);
+                //System.out.println(" motionX: "+(int)(player.motionX*10000)+" motionY: "+(int)(player.motionY*10000)+" motionZ: "+(int)(player.motionZ*10000));
+                //System.out.println(player.fallDistance);
+                if (player.inventory.armorInventory[2] == null)
+                {
+                    return true;
+                }
+
+        	if((player == Platform.getPlayerInstance()) && player.inventory.armorInventory[2].itemID-256 == itemParachuteArmorId)
+        	{
+                    //boolean parachuteEquipped = (chute.itemID - 256) == itemParachuteArmorId;
+                    //boolean parachuteDeployed;
+                    boolean parachuteEquipped = true;
+                    if (player.fallDistance > 3 && parachuteEquipped)
+                    {
+                        System.out.println("Client: "+player.fallDistance+" parachuteEquipped: "+parachuteEquipped+" parachuteDeployed: "+parachuteDeployed);
+    
+                        player.fallDistance = 1;
+                        player.motionY = -0.3f;
+    
+                        if (!parachuteDeployed)
+                        {
+                            parachuteDeployed = true;
+                            
+                            if(Platform.isSimulating())
+                            {
+                        	EntityParachute theChute = new EntityParachute(world, (int)player.posX, (int)player.posY, (int)player.posZ, player);
+                        	world.spawnEntityInWorld(theChute);
+                        	System.out.println("Client: Parachute spawned");
+                            }
+                        }
+                    }
+                    else if (parachuteDeployed && player.fallDistance == 0)
+                    {
+                        parachuteDeployed = false;
+                    }
+                    else if (parachuteDeployed)
+                    {
+                        player.fallDistance = 0.1f;
+                        //player.motionY = -0.4f;
+                        player.motionY = -0.01f;
+                    }
+        	}
+        	else
+        	{
+        	    return true;
+        	}
+            }
+        }
+
+        return true;
+    }
+    
+    static
+    {
+
+        initialized = false;
+
+        /*try
+        {
+            config = new Configuration(new File(Minecraft.getMinecraftDir(), "config/RocketScienceClient.cfg"));
+            config.load();
+        }
+        catch (Exception e)
+        {
+            System.out.println("RocketScience failed to load or create configuration.");
+            config = null;
+        }
+
+        config.save();*/
+    }
+}
+

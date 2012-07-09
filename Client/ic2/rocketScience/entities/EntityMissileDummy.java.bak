@@ -1,0 +1,54 @@
+package ic2.rocketScience.entities;
+
+import net.minecraft.src.Entity;
+import net.minecraft.src.EntityLiving;
+import net.minecraft.src.World;
+
+public class EntityMissileDummy extends EntityLiving
+{
+    public EntityMissileDummy(World world)
+    {
+        super(world);
+    }
+
+    public static void updateFall(Entity entity, float distance)
+    {
+        entity.fallDistance = distance;
+    }
+
+    public static boolean isFallDistance(Entity entity, float distance)
+    {
+        return entity.fallDistance == distance;
+    }
+
+    public int getMaxHealth()
+    {
+        return 0;
+    }
+    
+}
+
+/*package net.minecraft.src;
+
+public class MissileDummyEntity extends EntityLiving
+{
+  public MissileDummyEntity(World world)
+  {
+    super(world);
+  }
+
+  public static void updateFall(Entity titty, float fall)
+  {
+    fallDistance = fall;
+  }
+
+  public static boolean isFallDistance(Entity titty, float fall)
+  {
+    return fallDistance == fall;
+  }
+
+  public int getMaxHealth()
+  {
+    return 0;
+  }
+}*/
